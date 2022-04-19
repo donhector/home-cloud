@@ -16,6 +16,7 @@ disable_root: true
 
 packages:
   - qemu-guest-agent
+  - ansible
 
 package_update: true
 package_upgrade: true
