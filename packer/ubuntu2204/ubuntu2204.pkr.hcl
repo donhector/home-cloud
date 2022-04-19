@@ -30,6 +30,7 @@ source "qemu" "ubuntu-2204-cloudimg" {
   headless    = true
   accelerator = var.accelerator
   qemuargs    = [["-smbios", "type=1,serial=ds=nocloud-net;s=http://{{.HTTPIP}}:{{.HTTPPort}}/"]]
+  boot_wait   = "1s"
 
 }
 
