@@ -67,7 +67,9 @@ build {
 
   # Runs on the VM being built
   provisioner "shell" {
-    inline = []
+    inline = [
+      echo "Ansible provisioner completed."
+    ]
   }
 
   # Runs on the Packer host
