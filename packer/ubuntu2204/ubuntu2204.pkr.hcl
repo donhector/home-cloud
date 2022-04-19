@@ -7,7 +7,7 @@ source "qemu" "ubuntu-2204-cloudimg" {
 
   vm_name          = "ubuntu2204-${local.timestamp}.${var.format}"
   http_directory   = "http"
-  output_directory = "dist"
+  output_directory = "output"
 
   cpus             = var.cpus
   memory           = var.memory
@@ -38,7 +38,7 @@ build {
 
   sources = ["source.qemu.ubuntu-2204-cloudimg"]
 
-  # Runs on the host
+  # Runs on the Packer host. Requires ansible to be already there.
   provisioner "ansible" {
     galaxy_file     = "ansible/requirements.yml"
     playbook_file   = "ansible/main.yml"
@@ -50,9 +50,10 @@ build {
     ]
   }
 
-  # Clean cloud-init run so this disk can be further cloud-inited down the line
+  # Runs on the VM being built
+  # Clean cloud-init run so we can further cloud-init the generated disk image
   provisioner "shell" {
-    inline = [ "sudo cloud-init clean", "sleep 300" ]
+    inline = [ "sudo cloud-init clean" ]
   }
 
   # Runs on the Packer host

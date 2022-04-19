@@ -2,6 +2,10 @@
 timezone: Europe/Madrid
 locale: en_US.UTF-8
 
+growpart:
+  mode: auto
+  devices: ["/"]
+
 users:
   - name: ubuntu
     sudo: ALL=(ALL) NOPASSWD:ALL

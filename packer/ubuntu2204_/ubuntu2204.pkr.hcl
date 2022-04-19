@@ -7,7 +7,7 @@ source "qemu" "ubuntu-2204-cloudimg" {
 
   vm_name          = "ubuntu2204-${local.timestamp}.${var.format}"
   http_directory   = "http"
-  output_directory = "dist"
+  output_directory = "output"
 
   cpus             = var.cpus
   memory           = var.memory
@@ -70,7 +70,8 @@ build {
   provisioner "shell" {
     inline = [
       "sudo apt remove -y ansible",
-      "sudo apt autoremove -y"
+      "sudo apt autoremove -y",
+      "sudo cloud-init clean"
     ]
   }
 

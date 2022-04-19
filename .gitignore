@@ -1,6 +1,6 @@
 ## Packer stuff
 packer_cache
-**/dist/
+**/output/
 **/box
 *.pkrvars.hcl
 *.log
