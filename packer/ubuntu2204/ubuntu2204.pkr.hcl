@@ -52,7 +52,7 @@ build {
 
   # Clean cloud-init run so this disk can be further cloud-inited down the line
   provisioner "shell" {
-    inline = [ "cloud-init clean", "sleep 300" ]
+    inline = [ "sudo cloud-init clean", "sleep 300" ]
   }
 
   # Runs on the Packer host
