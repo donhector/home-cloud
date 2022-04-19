@@ -17,8 +17,8 @@ source "qemu" "ubuntu-2004-cloudimg" {
   disk_interface   = "virtio"
   net_device       = "virtio-net"
 
-  vnc_port_min = 5900
-  vnc_port_max = 5900
+  vnc_port_min = 6000
+  vnc_port_max = 6000
 
   ssh_handshake_attempts    = 500
   ssh_pty                   = true
