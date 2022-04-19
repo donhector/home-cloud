@@ -49,9 +49,8 @@ build {
   # that knows how to handle requirements.yml with both roles and collections
   provisioner "shell" {
     inline = [
-      "sleep 10",
       "sudo apt update",
-      "sudo apt install -y ansible",
+      "sudo apt install --no-install-recommends -y ansible",
       "ansible-galaxy install -r /tmp/requirements.yml"
     ]
     max_retries = 5
@@ -68,9 +67,7 @@ build {
 
   # Runs on the VM being built
   provisioner "shell" {
-    inline = [
-      "sudo apt remove ansible"
-    ]
+    inline = []
   }
 
   # Runs on the Packer host

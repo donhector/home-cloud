@@ -14,12 +14,4 @@ users:
 ssh_pwauth: false
 disable_root: true
 
-packages:
-  - qemu-guest-agent
-  - ansible
-
-package_update: true
-package_upgrade: true
-package_reboot_if_required: true
-
 final_message: "The system is finally up, after $UPTIME seconds"
