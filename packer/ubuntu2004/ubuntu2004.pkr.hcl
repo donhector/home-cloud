@@ -20,13 +20,12 @@ source "qemu" "ubuntu-2004-cloudimg" {
   vnc_port_min = 6000
   vnc_port_max = 6000
 
-  ssh_handshake_attempts    = 500
-  ssh_pty                   = true
-  ssh_timeout               = "30m"
-  ssh_username              = "ubuntu"
-  ssh_password              = var.ssh_password
-  ssh_clear_authorized_keys = true
-
+  ssh_handshake_attempts = 500
+  ssh_pty                = true
+  ssh_timeout            = "30m"
+  ssh_username           = "ubuntu"
+  ssh_private_key_file   = "~/.ssh/id_ed25519"
+  #ssh_password              = var.ssh_password
 
   headless    = true
   accelerator = var.accelerator
