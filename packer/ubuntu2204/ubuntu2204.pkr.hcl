@@ -43,6 +43,11 @@ build {
     galaxy_file     = "ansible/requirements.yml"
     playbook_file   = "ansible/main.yml"
     extra_arguments = ["-vvv"]
+    ansible_env_vars = [
+      "ANSIBLE_FORCE_COLOR=1",
+      "PYTHONUNBUFFERED=1",
+      "ANSIBLE_HOST_KEY_CHECKING=False"
+    ]
   }
 
   # Runs on the Packer host
