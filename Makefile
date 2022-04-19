@@ -4,13 +4,15 @@ SHELL := /usr/bin/env bash
 ubuntu2204:
 	@cd packer/ubuntu2204 && \
 		packer init . && \
-		packer build -force .
+		packer build -force . | \
+		tee packer.log
 
 .PHONY: ubuntu2204-debug
 ubuntu2204-debug:
 	@cd packer/ubuntu2204 && \
 		packer init . && \
-		PACKER_LOG=1 packer build -on-error=ask -force .
+		PACKER_LOG=1 packer build -on-error=ask -force . | \
+		tee packer.log
 
 .PHONY: ubuntu2204-lint
 ubuntu2204-lint:
