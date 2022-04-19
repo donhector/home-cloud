@@ -36,11 +36,6 @@
             path: /var/lib/dbus/machine-id
             state: absent
 
-    - name: Remove ansible
-      apt:
-        name: ansible
-        state: absent
-
     - name: Clean packages
       apt:
         autoclean: yes
