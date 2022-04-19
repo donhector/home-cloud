@@ -37,17 +37,25 @@ build {
 
   sources = ["source.qemu.ubuntu-2204-cloudimg"]
 
+  # Workaround for dealing with requirements that include roles and collections
+  # See https://github.com/hashicorp/packer-plugin-ansible/issues/32
+  provisioner "file" {
+    source      = "ansible/requirements.yml"
+    destination = "/tmp/"
+  }
+
   # Runs on the VM being built.
   # 2204 ships with a modern enough version of ansible
   # that knows how to handle requirements.yml with both roles and collections
-  # provisioner "shell" {
-  #   inline = [
-  #     "sleep 10",
-  #     "sudo apt update",
-  #     "sudo apt install -y ansible"
-  #   ]
-  #   max_retries = 5
-  # }
+  provisioner "shell" {
+    inline = [
+      "sleep 10",
+      "sudo apt update",
+      "sudo apt install -y ansible",
+      "ansible-galaxy install -r /tmp/requirements.yml"
+    ]
+    max_retries = 5
+  }
 
   # Runs on the VM being built
   provisioner "ansible-local" {
@@ -55,16 +63,15 @@ build {
     command                 = "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook"
     playbook_file           = "ansible/main.yml"
     extra_arguments         = ["-vvv"]
-    galaxy_command          = "ansible-galaxy"
-    galaxy_file             = "ansible/requirements.yml"
     clean_staging_directory = true
   }
 
   # Runs on the VM being built
-  # provisioner "shell" {
-  #   inline            = ["sudo systemctl reboot"]
-  #   expect_disconnect = true
-  # }
+  provisioner "shell" {
+    inline = [
+      "sudo apt remove ansible"
+    ]
+  }
 
   # Runs on the Packer host
   post-processor "shell-local" {
