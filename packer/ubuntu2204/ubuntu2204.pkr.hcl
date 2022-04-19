@@ -1,6 +1,6 @@
 source "qemu" "ubuntu-2204-cloudimg" {
 
-  iso_checksum = "file:http://cdimage.ubuntu.com/ubuntu-server/daily-live/pending/SHA256SUMS"
+  iso_checksum = "file:https://cloud-images.ubuntu.com/jammy/current/SHA256SUMS"
   iso_urls = [
     "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
   ]
@@ -9,6 +9,7 @@ source "qemu" "ubuntu-2204-cloudimg" {
   http_directory   = "http"
   output_directory = "dist"
 
+  cpus             = var.cpus
   memory           = var.memory
   disk_size        = var.disk_size
   format           = var.format
@@ -25,13 +26,10 @@ source "qemu" "ubuntu-2204-cloudimg" {
   ssh_timeout            = "30m"
   ssh_username           = "ubuntu"
   ssh_private_key_file   = var.ssh_private_key_file
-  #ssh_password              = var.ssh_password
 
   headless    = true
   accelerator = var.accelerator
   qemuargs    = [["-smbios", "type=1,serial=ds=nocloud-net;s=http://{{.HTTPIP}}:{{.HTTPPort}}/"]]
-
-  shutdown_command = "echo '${var.ssh_password}' | sudo -S poweroff"
 
 }
 
@@ -51,10 +49,10 @@ build {
 
   # Runs on the VM being built
   provisioner "ansible-local" {
-    playbook_dir    = "ansible"
-    command         = "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook"
-    playbook_file   = "ansible/main.yml"
-    extra_arguments = ["-vvv"]
+    playbook_dir            = "ansible"
+    command                 = "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook"
+    playbook_file           = "ansible/main.yml"
+    extra_arguments         = ["-vvv"]
     galaxy_file             = "ansible/requirements.yml"
     clean_staging_directory = true
   }
