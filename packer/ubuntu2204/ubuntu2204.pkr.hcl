@@ -50,6 +50,10 @@ build {
     ]
   }
 
+  provisioner "shell" {
+    inline = [ "cloud-init status" ]
+  }
+
   # Runs on the Packer host
   post-processor "shell-local" {
     inline = ["echo Build ${source.type}.${source.name} finished!"]
