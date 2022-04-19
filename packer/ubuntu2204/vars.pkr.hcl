@@ -2,24 +2,23 @@ locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
 
+variable "cpus" {
+  type        = number
+  default     = 2
+  description = "CPUs to allocate to the building VM"
+}
+
 variable "memory" {
   type        = number
   default     = 1024
-  description = "Memory in mb to allocate to the resulting build"
+  description = "Memory in mb to allocate to the building VM"
 }
 
 variable "disk_size" {
   type        = string
-  default     = "10G"
+  default     = "8G"
   description = "Disk size in mb to allocate to the resulting build"
 }
-
-# variable "ssh_password" {
-#   sensitive   = true
-#   type        = string
-#   default     = "ubuntu"
-#   description = "SSH Password to use for connecting to the build"
-# }
 
 variable "ssh_private_key_file" {
   sensitive   = true
@@ -37,6 +36,5 @@ variable "format" {
 variable "accelerator" {
   type        = string
   default     = "kvm"
-  description = "Host acceleration type to use."
+  description = "Host acceleration type to use. Use 'tcg' for Github hosted runners"
 }
-
