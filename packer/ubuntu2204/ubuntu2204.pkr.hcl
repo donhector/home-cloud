@@ -45,6 +45,7 @@ build {
       "sudo apt update",
       "sudo apt install -y ansible"
     ]
+    max_retries = 5
   }
 
   # Runs on the VM being built
