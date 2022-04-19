@@ -42,6 +42,7 @@ build {
   # that knows how to handle requirements.yml with both roles and collections
   provisioner "shell" {
     inline = [
+      "sleep 10",
       "sudo apt update",
       "sudo apt install -y ansible"
     ]
@@ -54,6 +55,7 @@ build {
     command                 = "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook"
     playbook_file           = "ansible/main.yml"
     extra_arguments         = ["-vvv"]
+    galaxy_command = "ansible-galaxy -r"
     galaxy_file             = "ansible/requirements.yml"
     clean_staging_directory = true
   }
