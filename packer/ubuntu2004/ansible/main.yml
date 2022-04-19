@@ -1,3 +1,0 @@
----
-- import_playbook: playbooks/01-install.yml
-- import_playbook: playbooks/02-cleanup.yml

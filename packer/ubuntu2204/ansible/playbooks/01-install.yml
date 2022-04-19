@@ -7,18 +7,25 @@
   vars_files:
     - ../vars/default.yml
 
+  pre_tasks:
+    - name: Update package cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+
   tasks:
     - name: Install common packages
       ansible.builtin.apt:
         name: "{{ apt_packages }}"
         state: present
-        update_cache: true
-        cache_valid_time: 600
         install_recommends: false
-        upgrade: dist
       retries: 3
       register: result
       until: result is succeeded
+
+    - name: Update upgradable packages
+      ansible.builtin.apt:
+        upgrade: dist
 
   roles:
     - geerlingguy.docker
