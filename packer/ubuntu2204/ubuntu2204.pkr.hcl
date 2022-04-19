@@ -69,8 +69,8 @@ build {
   # Runs on the VM being built
   provisioner "shell" {
     inline = [
-      "sudo apt remove ansible",
-      "sudo apt autoremove"
+      "sudo apt remove -y ansible",
+      "sudo apt autoremove -y"
     ]
   }
 
