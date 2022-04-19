@@ -34,10 +34,6 @@
             path: /var/lib/dbus/machine-id
             state: absent
 
-    - name: cloud-init clean (allows further cloud-initing)
-      ansible.builtin.shell: |
-        cloud-init clean
-
     - name: Clean packages
       apt:
         autoclean: yes
