@@ -23,4 +23,4 @@ ubuntu2204-lint:
 
 .PHONY: clean
 ubuntu2204-clean:
-	@rm -rfv packer/ubuntu2204/dist
+	@rm -rfv packer/ubuntu2204/dist ~/.cache/packer/

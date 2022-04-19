@@ -40,14 +40,14 @@ build {
   # Runs on the VM being built.
   # 2204 ships with a modern enough version of ansible
   # that knows how to handle requirements.yml with both roles and collections
-  provisioner "shell" {
-    inline = [
-      "sleep 10",
-      "sudo apt update",
-      "sudo apt install -y ansible"
-    ]
-    max_retries = 5
-  }
+  # provisioner "shell" {
+  #   inline = [
+  #     "sleep 10",
+  #     "sudo apt update",
+  #     "sudo apt install -y ansible"
+  #   ]
+  #   max_retries = 5
+  # }
 
   # Runs on the VM being built
   provisioner "ansible-local" {
@@ -55,7 +55,7 @@ build {
     command                 = "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook"
     playbook_file           = "ansible/main.yml"
     extra_arguments         = ["-vvv"]
-    galaxy_command = "ansible-galaxy -r"
+    galaxy_command          = "ansible-galaxy"
     galaxy_file             = "ansible/requirements.yml"
     clean_staging_directory = true
   }
