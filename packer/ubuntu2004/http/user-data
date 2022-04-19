@@ -1,0 +1,21 @@
+#cloud-config
+timezone: Europe/Madrid
+locale: en_US.UTF-8
+
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: false
+    shell: /bin/bash
+    groups: users,adm,cdrom,sudo,dip,plugdev,lxd
+    passwd: $6$OLtV4MkZXnNEtCuF$ACpYQCfOcA3CgVL0tyrl04YSXZXkKRIcyVNcOJfbWHsrjxvkp5RySOgjvYyp2veTNaKHPA/Jx2gCiJ7gvBtB3/
+    ssh_import_id: gh:donhector
+
+ssh_pwauth: false
+disable_root: true
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
+final_message: "The system is finally up, after $UPTIME seconds"

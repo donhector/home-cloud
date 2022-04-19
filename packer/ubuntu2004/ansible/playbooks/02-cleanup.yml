@@ -1,0 +1,42 @@
+---
+- name: Cleanup
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  tasks:
+    - name: cloud-init clean (allows further cloud-initing)
+      ansible.builtin.shell: |
+        cloud-init clean --logs
+
+    - name: Remove files and folders.
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /var/log/installer
+        - /var/log/btmp
+        - /var/log/wtmp
+        - /var/log/lastlog
+        - /root/.bash_history
+        - /home/{{ ansible_env.SUDO_USER }}/.bash_history
+
+    - name: Truncate log files
+      shell: |
+        find /var/log -type f | while read f; do echo -ne '' > "${f}"; done;
+
+    - name: Reset the machine-id
+      block:
+        - name: Empty machine-id
+          copy:
+            content: ""
+            dest: /etc/machine-id
+        - name: Remove the dbus machine-id
+          file:
+            path: /var/lib/dbus/machine-id
+            state: absent
+
+    - name: Clean packages
+      apt:
+        autoclean: yes
+        autoremove: yes

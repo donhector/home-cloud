@@ -1,0 +1,6 @@
+## Packer stuff
+packer_cache
+**/dist/
+**/box
+*.pkrvars.hcl
+*.log
