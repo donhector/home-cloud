@@ -5,10 +5,6 @@
   become: true
 
   tasks:
-    - name: cloud-init clean (allows further cloud-initing)
-      ansible.builtin.shell: |
-        cloud-init clean --logs
-
     - name: Remove files and folders.
       file:
         path: "{{ item }}"
@@ -35,6 +31,10 @@
           file:
             path: /var/lib/dbus/machine-id
             state: absent
+
+    - name: cloud-init clean (allows further cloud-initing)
+      ansible.builtin.shell: |
+        cloud-init clean
 
     - name: Clean packages
       apt:

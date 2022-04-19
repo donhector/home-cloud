@@ -10,6 +10,8 @@
         path: "{{ item }}"
         state: absent
       loop:
+        - /var/log/cloud-init.log
+        - /var/log/cloud-init-output.log
         - /var/log/installer
         - /var/log/btmp
         - /var/log/wtmp
@@ -34,7 +36,7 @@
 
     - name: cloud-init clean (allows further cloud-initing)
       ansible.builtin.shell: |
-        cloud-init clean --logs
+        cloud-init clean
 
     - name: Clean packages
       apt:
