@@ -51,7 +51,7 @@ build {
   }
 
   provisioner "shell" {
-    inline = [ "cloud-init status" ]
+    inline = [ "cloud-init status", "exit 1" ]
   }
 
   # Runs on the Packer host
