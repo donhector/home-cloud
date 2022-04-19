@@ -1,0 +1,6 @@
+cpus                 = 1
+memory               = 1024
+disk_size            = "10G"
+format               = "qcow2"
+accelerator          = "kvm"
+ssh_private_key_file = "~/.ssh/id_ed25519"
