@@ -1,5 +1,8 @@
 SHELL := /usr/bin/env bash
 
+#####################
+## PACKER SECTION  ##
+#####################
 .PHONY: ubuntu2204
 ubuntu2204:
 	@cd packer/ubuntu2204 && \
@@ -23,4 +26,4 @@ ubuntu2204-lint:
 
 .PHONY: clean
 ubuntu2204-clean:
-	@rm -rfv packer/ubuntu2204/output ~/.cache/packer/
+	@rm -rfv packer/ubuntu2204/output
