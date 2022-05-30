@@ -1,0 +1,31 @@
+---
+
+- block:
+
+    - name: Ensure selected cni plugin is suported
+      assert:
+        that:
+          - kubernetes_cni_plugin in kubernetes_cni_plugin_list
+        fail_msg: "Unsupported cni plugin. Choose one from: {{ kubernetes_cni_plugin_list | join(', ') }}"
+        success_msg: "Good news, '{{ kubernetes_cni_plugin }}' plugin is supported"
+
+    - name: Setup kubernetes networking.
+      ansible.builtin.include_tasks: '{{kubernetes_cni_plugin}}.yml'
+
+  run_once: true
+
+- name: Wait for master nodes to be "Ready"
+  ansible.builtin.command: >
+    kubectl wait --for=condition=Ready node {{ ansible_hostname }} --all --timeout=5m
+  changed_when: false
+
+
+# - name: Check that all kube-system pods for worker node are ready
+#   ansible.builtin.shell: >
+#     kubectl wait
+#     -n kube-system
+#     --timeout 5m
+#     --for condition=Ready
+#     --field-selector spec.nodeName={{ ansible_hostname }}
+#     pods
+#   changed_when: false

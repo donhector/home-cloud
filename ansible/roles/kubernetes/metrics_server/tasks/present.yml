@@ -1,0 +1,6 @@
+
+- name: Deploy metrics-server
+  ansible.builtin.shell: |
+    kubectl apply -f {{ metrics_server_manifest_url }}
+  register: result
+  changed_when: "'created' in result.stdout"

@@ -1,0 +1,10 @@
+---
+containerd_config_cgroup_driver_systemd: true
+kubeadm_packages_kubernetes_version: 1.24.0
+
+firewall_rules:
+  - { rule: "allow", proto: "tcp", port: "179"      , comment: "Calico BGP" }
+  - { rule: "allow", proto: "udp", port: "4789"     , comment: "Calico VXLAN" }
+  - { rule: "allow", proto: "tcp", port: "5473"     , comment: "Calico Typha" }
+  - { rule: "allow", proto: "tcp", port: "6783"     , comment: "Weave" }
+  - { rule: "allow", proto: "udp", port: "6783:6784", comment: "Weave" }

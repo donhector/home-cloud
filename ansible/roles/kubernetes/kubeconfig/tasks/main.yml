@@ -1,0 +1,55 @@
+---
+
+- name: Ensure ~/.kube directory exists for 'root' user
+  ansible.builtin.file:
+    path: ~/.kube
+    state: directory
+    mode: 0755
+
+- name: Symlink kubeconfig in ~/.kube/config
+  ansible.builtin.file:
+    src: '{{ kubeconfig_source_path }}'
+    dest: ~/.kube/config
+    state: link
+    mode: 0600
+
+- name: Ensure ~/.kube directory exists for '{{ ansible_user }}' user
+  become: true
+  become_user: '{{ ansible_user }}'
+  ansible.builtin.file:
+    path: ~/.kube
+    state: directory
+    mode: 0755
+
+- name: Set kubeconfig in /home/{{ ansible_user }}/.kube/config
+  ansible.builtin.copy:
+    src: '{{ kubeconfig_source_path }}'
+    dest: /home/{{ ansible_user }}/.kube/config
+    remote_src: yes
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+    mode: 0600
+
+- name: Ensure bash-completion package is present
+  ansible.builtin.package:
+    name:
+      - bash-completion
+    state: present
+    update_cache: yes
+
+- name: Ensure kubectl completion
+  ansible.builtin.copy:
+    dest: '/etc/profile.d/kubectl.sh'
+    mode: 0755
+    owner: 'root'
+    group: 'root'
+    content: |
+      #!/usr/bin/env bash
+      source <(kubectl completion bash)
+
+- name: Set kubeconfig in /home/{{ lookup('env','USER') }}/.kube/config on control machine
+  ansible.builtin.fetch:
+    src: '{{ kubeconfig_source_path }}'
+    dest: ~/.kube/config
+    flat: true
+  run_once: true

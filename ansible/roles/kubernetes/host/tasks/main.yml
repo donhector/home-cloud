@@ -1,0 +1,65 @@
+---
+
+- name: Set same timezone on every host
+  community.general.timezone:
+    name: '{{ host_timezone }}'
+
+- name: Install common os packages
+  ansible.builtin.package:
+    name:
+      - jq
+      - logrotate
+    update_cache: yes
+    state: present
+
+- ansible.builtin.include_tasks: setup-RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Disable swap for current session (if enabled)
+  ansible.builtin.command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Disable swap permanently in /etc/fstab
+  ansible.posix.mount:
+    name: '{{ item }}'
+    fstype: swap
+    state: absent
+  loop:
+    - swap
+    - none
+
+- name: Load required kernel modules
+  community.general.modprobe:
+    name: '{{ item}}'
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Add required modules to /etc/modules-load.d/kubernetes.conf
+  vars:
+    modules: |
+      overlay
+      br_netfilter
+  ansible.builtin.copy:
+    content: '{{ modules }}'
+    dest: /etc/modules-load.d/kubernetes.conf
+    mode: 'u=rw,g=,o='
+
+- name: Set required kernel parameters
+  ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    state: present
+    reload: yes
+  loop:
+    - { name: net.ipv4.ip_forward, value: '1' }
+    - { name: net.ipv6.conf.all.forwarding, value: '1' }
+    - { name: net.bridge.bridge-nf-call-iptables, value: '1' }
+    - { name: net.bridge.bridge-nf-call-ip6tables, value: '1' }
+
+# Setup prerequistes for running kubeproxy in 'ipvs' mode (more performant than the default "iptables" mode)
+# Some CNI plugins (ie: calico, cilium) support eBPF mode, which perform even better than 'ipvs', but setup is complex
+# and might be overkill for small K8s clusters  
+- ansible.builtin.include_tasks: ipvs.yml
+  when: host_enable_ipvs == true

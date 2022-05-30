@@ -1,0 +1,47 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+nodeRegistration:
+  name: {{ kubeadm_master_name }}
+  criSocket: unix:///var/run/containerd/containerd.sock
+  ignorePreflightErrors: {{ kubeadm_master_ignore_preflight_errors }}
+{% if kubeadm_master_untaint == true %}
+  taints: []
+{% endif %}
+
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+clusterName: k8s
+kubernetesVersion: v{{ kubeadm_packages_kubernetes_version }}
+controlPlaneEndpoint: {{ kubeadm_master_apiserver_address }}:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 10.244.0.0/16
+  serviceSubnet: 10.96.0.0/12
+apiServer:
+  certSANs:
+    - 127.0.0.1  # Allow connecting via SSH tunnel
+    - localhost  # Allow connecting via SSH tunnel
+    - {{ kubeadm_master_apiserver_address }}  # K8s masters LB address (ie. kubevip address)
+
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+serverTLSBootstrap: true
+
+---
+# See https://kubernetes.io/docs/reference/config-api/kube-proxy-config.v1alpha1/
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: {{ kubeadm_master_kubeproxy_mode }}
+#ipvs:
+#  excludeCIDRs: null
+#  minSyncPeriod: 2s
+#  scheduler: wlc
+#  strictARP: false  ## set to true for metallb or kubevip
+#  syncPeriod: 30s
+#  tcpFinTimeout: 0s
+#  tcpTimeout: 0s
+#  udpTimeout: 0s

@@ -1,0 +1,24 @@
+---
+
+- name: Check if node has already been initialized
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: initizalized
+
+- name: Show initialized check result 
+  ansible.builtin.debug:
+    msg:
+      - 'Initialized: {{ initizalized.stat.exists }}'
+
+- name: Join node (if not already joined)
+  ansible.builtin.include_tasks: join.yml
+  when:
+    - not initizalized.stat.exists
+
+- name: Wait for node to be "Ready"
+  ansible.builtin.command: >
+    kubectl wait --for=condition=Ready node {{ kubeadm_node_name }} --all --timeout=5m
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  delegate_to: "{{ groups['masters'][0] }}"
+  changed_when: false

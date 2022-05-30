@@ -1,0 +1,76 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-nginx
+  labels:
+    app: nginx
+    env: dev
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-pvc-claim
+  namespace: app-nginx
+  labels:
+    app: nginx
+    env: dev
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: app-nginx
+  labels:
+    app: nginx
+    env: dev
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1 
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - name: http
+            - containerPort: 80   
+          volumeMounts:
+            - mountPath: /var/www/html
+              name: html
+      volumes:
+      - name: html
+        persistentVolumeClaim:
+          claimName: nginx-pvc-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: app-nginx
+  labels:
+    app: nginx
+    env: dev
+spec:
+  selector:
+    app: nginx
+  type: LoadBalancer
+  ports:
+    - name: web
+      port: 80
+      targetPort: http

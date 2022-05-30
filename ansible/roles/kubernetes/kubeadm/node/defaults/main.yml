@@ -1,0 +1,11 @@
+---
+
+kubeadm_node_ignore_preflight_errors: []  # Ignore minimum cpu and mem for smaller cluster. Example: [ NumCPU, Mem ]
+
+# By default, the node name used by K8s is a golang call to 'os.hostname'.
+# In most OS that call returns the short hostname (ie. without the domain part)
+# However on Fedora hosts, that call also includes the domain part (ie. it returns the fqdn)
+# So in order to have a consistent naming convention, we can leverage the 'ansible_hostname' fact
+# as it always returns the short form regardless of OS.
+# If the fqdn form is preferred, then use the 'ansible_fqdn' fact instead.
+kubeadm_node_name: '{{ ansible_hostname | lower }}'

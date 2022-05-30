@@ -1,0 +1,24 @@
+---
+
+- name: Check if longhorn is installed
+  ansible.builtin.command: kubectl get ns longhorn-system --ignore-not-found
+  register: longhorn_check
+  changed_when: false
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true
+
+# - ansible.builtin.debug:
+#     var: longhorn_check
+#   run_once: true
+
+- name: Including install tasks
+  ansible.builtin.include_tasks: install.yml
+  when:
+    - longhorn_state == "present"
+    - '"longhorn-system" not in longhorn_check.stdout'
+
+- name: Including uninstall tasks
+  ansible.builtin.include_tasks: uninstall.yml
+  when:
+    - longhorn_state == "absent"
+    - '"longhorn-system" in longhorn_check.stdout'

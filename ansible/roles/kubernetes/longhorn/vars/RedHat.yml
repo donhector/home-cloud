@@ -1,0 +1,6 @@
+---
+longhorn_deps:
+  - iscsi-initiator-utils
+  - nfs-utils
+
+longhorn_iscsi_service_name: iscsi

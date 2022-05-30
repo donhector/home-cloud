@@ -1,0 +1,16 @@
+---
+firewall_rules:
+  - { rule: "allow", proto: "tcp", port: "6443"     , comment: "K8s API"}
+  - { rule: "allow", proto: "tcp", port: "2379:2380", comment: "K8s etcd" }
+  - { rule: "allow", proto: "tcp", port: "10250"    , comment: "K8s kubelet" }
+  - { rule: "allow", proto: "tcp", port: "10257"    , comment: "K8s controller manager" }
+  - { rule: "allow", proto: "tcp", port: "10259"    , comment: "K8s scheduler" }
+
+
+kubevip_address: k8s.home.lab
+
+kubeadm_master_apiserver_address: "{{ kubevip_address }}"
+kubeadm_master_ignore_preflight_errors: [ NumCPU, Mem ]
+kubeadm_master_untaint: false
+
+kubernetes_cni_plugin: calico

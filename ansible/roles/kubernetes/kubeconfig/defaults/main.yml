@@ -1,0 +1,3 @@
+---
+
+kubeconfig_source_path: /etc/kubernetes/admin.conf

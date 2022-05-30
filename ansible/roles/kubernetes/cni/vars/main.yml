@@ -1,0 +1,14 @@
+---
+
+kubernetes_cni_plugin_list: [ 'calico', 'flannel', 'weave', 'cilium' ]
+
+kubernetes_cni_plugin_details:
+  calico:
+    manifests:
+      - https://projectcalico.docs.tigera.io/manifests/tigera-operator.yaml
+      - https://projectcalico.docs.tigera.io/manifests/custom-resources.yaml
+      #- Alternative way: https://docs.projectcalico.org/manifests/calico.yaml
+  flannel:
+    manifests:
+      - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml

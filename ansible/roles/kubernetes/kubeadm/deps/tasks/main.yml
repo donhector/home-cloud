@@ -1,0 +1,30 @@
+---
+
+- name: Install common packages for setting up K8s repos 
+  ansible.builtin.package:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - gnupg2
+    state: present
+    update_cache: yes
+
+- ansible.builtin.include_tasks: setup-RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- ansible.builtin.include_tasks: setup-Debian.yml
+  when: ansible_os_family == 'Debian'
+
+# See https://stackoverflow.com/questions/58481709/why-kubelet-is-running-on-kubernetes-master-node
+# If not using kubeadm, probably you don't need the kubelet running on your master nodes. 
+- name: Ensure kubelet is started and enabled at boot.
+  ansible.builtin.service:
+    name: kubelet
+    state: started
+    enabled: true
+
+- name: Create crictl configuration 
+  ansible.builtin.copy:
+    src: crictl.yaml
+    dest: /etc/crictl.yaml
+    mode: 0644

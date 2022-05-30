@@ -1,0 +1,19 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    token: {{ kubeadm_token }}
+    apiServerEndpoint: {{ kubeadm_control_plane_endpoint }}
+    unsafeSkipCAVerification: true
+    caCertHashes:
+      - {{ kubeadm_ca_cert_hash }}
+nodeRegistration:
+  name: {{ kubeadm_node_name }}
+  criSocket: unix:///var/run/containerd/containerd.sock
+  ignorePreflightErrors: {{ kubeadm_node_ignore_preflight_errors }}
+
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd

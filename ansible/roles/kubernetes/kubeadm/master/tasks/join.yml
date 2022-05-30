@@ -1,0 +1,56 @@
+---
+
+# At this point we should have our first master up. We can proceed to build a JoinConfiguration
+# for any additional master(s). To do so we need some bits of information such as:
+# - The certificate key that was used to encrypt the uploaded certs
+# - A boostrap token
+# - The cert hash (assuming 'unsafeSkipCAVerification: true')
+# See https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/#kubeadm-k8s-io-v1beta3-JoinConfiguration
+# We will use groups["masters"][0] to obtain the required info
+
+- block:
+
+    - name: Upload control-plane certs
+      ansible.builtin.command: kubeadm init phase --config /tmp/config.yml upload-certs --upload-certs
+      register: kubeadm_upload_certs
+
+    - name: Upload control-plane certs (output)
+      ansible.builtin.debug:
+        var: kubeadm_upload_certs.stdout_lines
+
+    - name: Create token and cert hash for joining
+      ansible.builtin.shell: kubeadm token create --print-join-command
+      register: kubeadm_token_create
+
+    - name: Create token and cert hash for joining (output)
+      ansible.builtin.debug:
+        var: kubeadm_token_create.stdout_lines
+
+    - name: Set parsed values as facts in every host in the play (ie. in every master)
+      ansible.builtin.set_fact:
+        kubeadm_certificate_key: '{{ kubeadm_upload_certs.stdout_lines[-1] | trim }}'
+        kubeadm_token: '{{ kubeadm_token_create.stdout.split()[-3] | trim }}'
+        kubeadm_ca_cert_hash: '{{ kubeadm_token_create.stdout.split()[-1] | trim }}'
+      delegate_to: '{{ item }}'
+      loop: '{{ ansible_play_hosts }}'
+      run_once: true
+  
+  run_once: true
+  delegate_to: '{{ groups["masters"][0] }}'
+
+- name: Render the kubeadm join template
+  ansible.builtin.template:
+    src: join-config.yml.j2
+    dest: /tmp/config.yml
+
+- name: kubeadm join
+  ansible.builtin.shell: kubeadm join --config /tmp/config.yml | tee /tmp/kubeadm_join_master.log
+  register: kubeadm_join
+
+- name: kubeadm join (stdout)
+  ansible.builtin.debug:
+    var: kubeadm_join.stdout_lines
+
+- name: kubeadm join (stderr)
+  ansible.builtin.debug:
+    var: kubeadm_join.stderr_lines

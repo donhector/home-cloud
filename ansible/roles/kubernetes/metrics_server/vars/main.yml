@@ -1,0 +1,3 @@
+---
+metrics_server_manifest: "{{ (metrics_server_ha_mode == true) | ternary('high-availability', 'components') }}.yaml"
+metrics_server_manifest_url: https://github.com/kubernetes-sigs/metrics-server/releases/{{ metrics_server_version }}/download/{{ metrics_server_manifest }}

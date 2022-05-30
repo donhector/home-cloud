@@ -1,0 +1,6 @@
+---
+longhorn_deps:
+  - open-iscsi
+  - nfs-common
+
+longhorn_iscsi_service_name: iscsid

@@ -1,0 +1,8 @@
+---
+- name: Clean up Kubernetes data
+  ansible.builtin.shell: |
+    kubeadm reset -f
+    systemctl stop kubelet
+    systemctl stop containerd
+    rm -rf /var/lib/{containerd,cni,etcd,calico,kubelet}
+    rm -rf /etc/{containerd,cni,kubernetes}

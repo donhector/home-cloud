@@ -1,0 +1,21 @@
+---
+
+- name: Set SELinux to disabled state
+  ansible.posix.selinux:
+    state: disabled
+
+- name: Add /usr/local/bin to sudo secure_path
+  ansible.builtin.lineinfile:
+    line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+    regexp: 'Defaults(\\s)*secure_path(\\s)*='
+    state: present
+    insertafter: EOF
+    path: /etc/sudoers
+    validate: 'visudo -cf %s'
+
+  # NOTE: Below task wil result in a failed 'systemd-zram-setup@zram0.service' unit until next reboot
+- name: Disable zram (too noisy when no swap)
+  ansible.builtin.dnf:
+    name: zram-generator-defaults
+    state: absent
+  when: ansible_os_family == "RedHat"

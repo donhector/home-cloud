@@ -1,0 +1,65 @@
+libvirt_connection = {
+  host            = "xeon.lan"
+  user            = "hector"
+}
+
+cluster_prefix = "k8s-"
+
+networks = {
+  host = {
+    mode = "bridge"
+    bridge = "br0"
+    addresses = ["192.168.10.0/24"]
+    domain = "lan"
+    offset = 200
+  }
+  cluster = {
+    mode = "nat"
+    domain = "home.lab"
+    addresses = ["10.5.0.0/24"]
+    offset = 100
+    dhcp = {
+      enabled = true
+    }
+    dns = {
+      enabled = true
+      local_only = true
+    }
+  }
+}
+
+nodes = {
+  bastion = {
+    cpu = 1
+    memory = 256
+    disk = 1024 * 1024 * 1024 * 5
+    os = "debian11"
+    nics = {
+      ens3 = {
+        dhcp = false
+        libvirt_network = "cluster"
+      }
+      ens4 = {
+        dhcp = false
+        ips = ["192.168.10.2"]
+        libvirt_network = "host"
+      }
+    }
+  }
+  master = {
+    cpu = 1
+    memory = 1024
+    disk = 1024 * 1024 * 1024 * 5
+    os = "debian11"
+    nics = { ens3 = { dhcp = true, libvirt_network = "cluster" } }
+  }
+  worker = {
+    cpu = 2
+    memory = 2048
+    disk = 1024 * 1024 * 1024 * 5
+    nics = { ens3 = { dhcp = true, libvirt_network = "cluster" } }
+    os = "ubuntu2204"
+  }
+}
+
+

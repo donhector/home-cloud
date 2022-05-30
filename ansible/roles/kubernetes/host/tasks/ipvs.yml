@@ -1,0 +1,33 @@
+---
+
+- name: Install ipvs related packages
+  ansible.builtin.package:
+    name:
+      - ipset
+      - ipvsadm
+    update_cache: yes
+    state: present
+
+- name: Load required ipvs kernel modules
+  community.general.modprobe:
+    name: '{{ item}}'
+    state: present
+  loop:
+    - ip_vs
+    - ip_vs_rr
+    - ip_vs_wrr
+    - ip_vs_sh
+    - nf_conntrack
+
+- name: Add required modules to /etc/modules-load.d/kubeproxy-ipvs.conf
+  vars:
+    modules: |
+      ip_vs
+      ip_vs_rr
+      ip_vs_wrr
+      ip_vs_sh
+      nf_conntrack
+  ansible.builtin.copy:
+    content: '{{ modules }}'
+    dest: /etc/modules-load.d/kubeproxy-ipvs.conf
+    mode: 'u=rw,g=,o='

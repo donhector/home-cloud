@@ -1,0 +1,3 @@
+---
+plugin: community.libvirt.libvirt
+uri: 'qemu+ssh://hector@xeon.lan/system'

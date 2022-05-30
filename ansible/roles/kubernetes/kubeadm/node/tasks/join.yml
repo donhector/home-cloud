@@ -1,0 +1,77 @@
+---
+
+- block:
+    - name: Create join command
+      ansible.builtin.shell: kubeadm token create --print-join-command
+      register: kubeadm_join_command
+
+    - name: Create join command (output)
+      ansible.builtin.debug:
+        var: kubeadm_join_command.stdout_lines
+
+    - name: Set join values as facts in every worker node
+      ansible.builtin.set_fact:
+        kubeadm_token: "{{ kubeadm_join_command.stdout.split()[-3] | trim }}"
+        kubeadm_ca_cert_hash: "{{ kubeadm_join_command.stdout.split()[-1] | trim }}"
+        kubeadm_control_plane_endpoint: "{{ kubeadm_join_command.stdout.split()[-5] | trim }}"
+      delegate_to: "{{ item }}"
+      loop: "{{ ansible_play_hosts }}"
+  run_once: true
+  delegate_to: "{{ groups['masters'][0] }}"
+
+
+- name: Render the kubeadm join template (leverages the facts set above)
+  ansible.builtin.template:
+    src: join-config.yml.j2
+    dest: /tmp/config.yml
+
+- name: kubeadm join
+  ansible.builtin.shell: kubeadm join --config /tmp/config.yml | tee /tmp/kubeadm_join.log
+  register: kubeadm_join
+
+- name: kubeadm join (stdout)
+  ansible.builtin.debug:
+    var: kubeadm_join.stdout_lines
+
+- name: kubeadm join (stderr)
+  ansible.builtin.debug:
+    var: kubeadm_join.stderr_lines
+
+# Approving pending certs allows kubelet to communicate with api server securely
+# We leverage jq since kubectl jsonpath implementation is not so great for advanced filtering
+- name: Approve pending certificate signing requests (since kubelet is configured with serverTLSBootstrap)
+  ansible.builtin.shell: |
+    kubectl get csr \
+    | grep 'system:node:{{ inventory_hostname }}' \
+    | grep -i Pending \
+    | cut -d' ' -f1 | xargs --no-run-if-empty kubectl certificate approve
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf  
+  register: result
+  changed_when: "'approved' in result.stdout"
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Show approved certs
+  ansible.builtin.debug:
+    var: result.stdout_lines
+
+# Since setting the node-role label via JoinConfiguration is not yet supported, we do it via kubectl
+# See https://blog.scottlowe.org/2020/11/30/assigning-node-labels-during-kubernetes-cluster-bootstrapping/
+# Also notice we use the same name as used in JoinConfiguration
+
+- name: Get node labels
+  ansible.builtin.shell: |
+    kubectl get node {{ kubeadm_node_name }} -o jsonpath='{.metadata.labels}'
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: node_labels
+  changed_when: false
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: Set node role to 'worker' (if not set)
+  ansible.builtin.command: >
+    kubectl label node {{ kubeadm_node_name }} node-role.kubernetes.io/worker=
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  delegate_to: "{{ groups['masters'][0] }}"
+  when: '"node-role.kubernetes.io/worker" not in node_labels.stdout'

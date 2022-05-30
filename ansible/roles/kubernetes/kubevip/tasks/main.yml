@@ -1,0 +1,58 @@
+---
+- name: Pull kube-vip image
+  ansible.builtin.command: ctr image pull {{ kubevip_image }}:{{ kubevip_tag }}
+  register: result
+  changed_when: "'0.0 B' not in result.stdout"
+
+- name: Ensure the kubernetes static manifests path exists  
+  ansible.builtin.file:
+    path: /etc/kubernetes/manifests
+    state: directory
+    mode: 0755
+
+# NOTE: I'm only using kubevip to provide load balancing (ie HA) for the control plan ("ie: --controlplane")
+# and not to provide service type "LoadBalancer" capability (ie: "--service"). The idea is to use MetalLb for that
+# In the future I might revisit using Kubevip for both functionalities. When using --service we must also
+# deploy the Kubevip cloud controller and specify the IP range to use. See https://kube-vip.chipzoller.dev/docs/usage/cloud-provider/
+
+- name: Deploying kube-vip as static pod (kubeadm)
+  ansible.builtin.shell: |
+    ctr run --rm --net-host "{{ kubevip_image }}:{{ kubevip_tag }}" vip /kube-vip manifest pod \
+      --arp \
+      --interface "{{ ansible_default_ipv4.interface }}" \
+      --address "{{ kubevip_address }}" \
+      --services \
+      --controlplane \
+      --leaderElection \
+      "{{ '--enableLoadBalancer' if kubevip_use_ipvs == 'true' }}" | tee /etc/kubernetes/manifests/kube-vip.yaml
+  args:
+    creates: /etc/kubernetes/manifests/kube-vip.yaml
+  when: kubevip_cluster_type == 'kubeadm'
+
+
+- block:
+  # TODO: if the rbac and deamonset manifests are not picked up automatically we will have to "kubectl apply -f" them
+  - name: Download kube-vip RBAC file (only when deploying as daemonset)
+    ansible.builtin.get_url:
+      url: https://kube-vip.io/manifests/rbac.yaml
+      dest: /etc/kubernetes/manifests/kube-vip-rbac.yaml
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Deploying kube-vip as daemon set (k3s and others)
+    ansible.builtin.shell: |
+      ctr run --rm --net-host "{{ kubevip_image }}:{{ kubevip_tag }}" vip /kube-vip manifest daemonset \
+        --arp \
+        --interface "{{ ansible_default_ipv4.interface }}" \
+        --address "{{ kubevip_address }}" \
+        --services \
+        --controlplane \
+        --leaderElection \
+        --taint \
+        --inCluster \
+        "{{ '--enableLoadBalancer' if kubevip_use_ipvs == 'true' }}" | tee /etc/kubernetes/manifests/kube-vip.yaml
+    args:
+      creates: /etc/kubernetes/manifests/kube-vip.yaml
+
+  when: kubevip_cluster_type != 'kubeadm'

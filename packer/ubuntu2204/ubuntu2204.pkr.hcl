@@ -53,7 +53,7 @@ build {
   # Runs on the VM being built
   # Clean cloud-init run so we can further cloud-init the generated disk image
   provisioner "shell" {
-    inline = [ "sudo cloud-init clean" ]
+    inline = ["sudo cloud-init clean"]
   }
 
   # Runs on the Packer host

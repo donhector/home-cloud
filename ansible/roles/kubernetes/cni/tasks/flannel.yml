@@ -1,0 +1,7 @@
+---
+
+- name: Apply '{{ kubernetes_cni_plugin }}' manifests
+  command: kubectl apply -f {{ item }}
+  register: cni_result
+  changed_when: "'created' in cni_result.stdout"
+  loop: "{{ kubernetes_cni_plugin_details[kubernetes_cni_plugin].manifests }}"

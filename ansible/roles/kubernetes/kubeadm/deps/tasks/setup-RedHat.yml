@@ -1,0 +1,29 @@
+---
+
+- name: Add Kubernetes YUM repository
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    file: kubernetes
+    description: Kubernetes Repository
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-$basearch
+    gpgkey:
+      - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: yes
+    exclude:
+      - kubeadm
+      - kubelet
+      - kubectl
+    enabled: yes
+
+- name: Install kubernetes dnf packages for {{ kubeadm_deps_kubernetes_version }}
+  ansible.builtin.dnf:
+    name:
+      - kubeadm-{{ kubeadm_deps_kubernetes_version }}-0
+      - kubelet-{{ kubeadm_deps_kubernetes_version }}-0
+      - kubectl-{{ kubeadm_deps_kubernetes_version }}-0
+      - kubernetes-cni
+      - iproute-tc
+    update_cache: yes
+    state: present
+    disable_excludes: kubernetes

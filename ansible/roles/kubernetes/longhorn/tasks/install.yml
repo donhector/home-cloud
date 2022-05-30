@@ -1,0 +1,36 @@
+---
+
+- name: Include OS-specific variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Install host packages
+  ansible.builtin.package: 
+    name: "{{ longhorn_deps }}"
+    state: present 
+
+- name: Ensure iscsi service is running
+  ansible.builtin.service:
+    name: "{{ longhorn_iscsi_service_name }}"
+    state: started
+    enabled: yes
+
+- name: Apply longhorn manifests
+  ansible.builtin.command: >
+    kubectl apply
+    -f https://raw.githubusercontent.com/longhorn/longhorn/{{ longhorn_version }}/deploy/longhorn.yaml
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true
+
+- name: Wait until longhorn-system pods are ready (timeout 5m)
+  ansible.builtin.command: >
+    kubectl wait pods -n longhorn-system --for condition=Ready --timeout 5m --selector '!dummy'
+  changed_when: false
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true
+
+- name: Patch longhorn storageclass as default
+  ansible.builtin.command: >
+    kubectl patch storageclass longhorn 
+    -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true

@@ -1,0 +1,36 @@
+---
+
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Disable 'firewalld' if present
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+    enabled: false
+  ignore_errors: true
+  when: ansible_facts.services["firewalld"] is defined
+
+- name: Install UFW
+  ansible.builtin.package:
+    name: ufw
+    state: present
+
+- name: Ensure UFW service is enabled
+  ansible.builtin.service:
+    name: ufw
+    state: started
+    enabled: true
+
+- name: Apply firewall rules
+  community.general.ufw:
+    rule: '{{ item.rule }}'
+    port: '{{ item.port }}'
+    proto: '{{ item.proto }}'
+    comment: '{{ item.comment }}'
+  loop: '{{ firewall_rules }}'
+  # register: result
+  debugger: on_failed
+  # # until: result.rc == 0
+  # # retries: 5
+  # # delay: 3

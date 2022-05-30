@@ -1,0 +1,125 @@
+libvirt_connection = {
+  host            = "xeon.lan"
+  user            = "hector"
+}
+
+cluster_prefix = "k8s-"
+
+default_user_data = {
+  username            = "kube"
+  password            = "$6$kg4B/C45o7wpuagy$EChLgozGUgT/oQMMsUmKe8rmmuYI7RD0Kz/8T8erso5/.aE3XSABVRS3nhDqzzTiJS/2H/jJ8P2zy5/3WxhYm."
+  groups              = "users,sudo"
+  ssh_authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBYOzTJoN5TImhjMTw9gYzYJiDIK5NHMAbJ8OXxvDX2W donhector"]
+}
+
+
+# We can define one or more Libvirt networks here.
+networks = {
+  host = {
+    # In 'bridge' mode, a Libvirt network can access the host network and allocate addresses from the host network range.
+    mode = "bridge"
+    # The bridge on the host. Terraform won't create this bridge, must pre-exist in the host. 
+    bridge = "br0"
+    # The host network IP range
+    addresses = ["192.168.10.0/24"]
+    # The host network domain
+    domain = "lan"
+    offset = 200
+  }
+  cluster = {
+    mode = "nat"
+    domain = "home.lab"
+    addresses = ["10.5.0.0/24"]
+    # Offset that will be used to calculate ip that will be allocated when not using DHCP.
+    offset = 100
+    dhcp = {
+      # Instruct Libvirt to allocate a dnsmasq instance to act as the DHCP server for the 10.5.0.0/24 network. This instance runs on 10.5.0.1
+      enabled = true
+      # Adjust the DHCP range the dnsmasq server will use. Useful for reserving IPs for static use (ie ha-proxy, kubevip, metallb, etc... )
+      range_start = "10.5.0.100"
+      range_end   = "10.5.0.254"
+    }
+    dns = {
+      # Instruct Libvirt to allocate a dnsmasq instance to act as the DNS server for the 10.5.0.0/24 network. This instance runs on 10.5.0.1
+      enabled = true
+      # Only use this dnsmasq server for resolving hosts in the 'home.lab' domain. Otherwise forward to the upstream DNS servers
+      local_only = true
+      # Add any extra DNS entries in the dnsmasq server instance.
+      # For example, here I'm adding an entry for what will be my k8s control-plane load balancer (k8s.home.lab) giving it static IP (notice it is outside the DHCP range) to act as the "VIP" 
+      extra_hosts = [ 
+        { hostname = "k8s.home.lab", ip = "10.5.0.10" }
+      ]
+      # NOTE: when using static IPs for your VM, the corresponding host entries will be automagically created, so no need to add those as 'extra_hosts'
+    }
+  }
+}
+
+nodes = {
+  bastion = {
+    cpu = 1
+    memory = 256
+    disk = 1024 * 1024 * 1024 * 5
+    os = "debian11"
+    nics = {
+      ens3 = {
+        dhcp = false
+        ips = ["10.0.0.2"]
+        mac = "0A:00:00:00:00:02"
+        libvirt_network = "cluster"
+      }
+      # We can add a second NIC and hook it to a different libvirt network
+      # In this case we attach it to the host network, so this VM can talk with other devices in my household
+      ens4 = {
+        dhcp = false
+        ips = ["192.168.10.2"]
+        mac = "0E:00:00:00:00:03"
+        libvirt_network = "host"
+      }
+    }
+  }
+  master = {
+    cpu = 1
+    memory = 1024
+    disk = 1024 * 1024 * 1024 * 5
+    os = "debian11"
+    nics = {
+      ens3 = {
+        # When dhcp is false, then a static ip will be calculated factoring in the network address range and offset, 
+        # unless you provide your desired IP in the 'ips' argument.
+        dhcp = false
+        ips = ["10.0.0.3"]
+        libvirt_network = "cluster"
+      }
+    }
+    user_data = {
+      username = "debian"
+      password = "$6$hYZDnsyICXsIRfks$5S.RaHI8cf4Fr5Gz/WFAb8sFbc8vMT6vnYpGuBjl.Z8xGOs/0ydbh/ifEkxwb/dU8VEvIx1lF9.7nv8Ci9OAU/"
+    }
+  }
+  worker = {
+    cpu = 2
+    memory = 2048
+    # Primary disk size (ie: the one hosting the OS)
+    disk = 1024 * 1024 * 1024 * 5
+    extra_disks = [
+      # First extra disk (ie: /dev/vdb) that will be partitioned+formatted+mounted. ie For use with Longhorn
+      { size = 1024 * 1024 * 1024 * 15, mount = "/var/lib/longhorn" },
+      # Second extra disk (ie: /dev/vdc) that won't be partioned/formatted/mounted. ie For use with openebs mayastor
+      { size = 1024 * 1024 * 1024 * 10}
+    ]
+    # We can choose the OS from the keys in var.download_os_images 
+    os = "ubuntu2204"
+    # Configure a NIC using dhcp and attach it to the "cluster" network
+    nics = { 
+      ens3 = {
+        dhcp = true
+        libvirt_network = "cluster"
+      }
+    }
+    # We can override individual user data keys from its defaults specified in var.default_user_data
+    user_data = {
+      username = "ubuntu"
+      password = "$6$igQudqAx7QEX8P3O$q2sChj3BxGxVcOPbyi5/s.GJyXAefeQ/mraO2k/qQ8VHOzo4WSw0f94dVaMnTv78e60qDU69p.HGh9JqkPNOW1"
+    }
+  }
+}

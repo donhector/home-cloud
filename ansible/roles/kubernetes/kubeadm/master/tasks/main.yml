@@ -1,0 +1,45 @@
+---
+
+- name: Check if Kubernetes has already been initialized
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: initizalized
+
+- name: Show initialized check result 
+  ansible.builtin.debug:
+    msg:
+      - 'Initialized: {{ initizalized.stat.exists }}'
+
+- name: Init first master (if not initialized)
+  ansible.builtin.include_tasks: init.yml
+  when:
+    - not initizalized.stat.exists
+    - inventory_hostname == groups["masters"][0]
+
+- name: Join additional masters (if not already joined)
+  ansible.builtin.include_tasks: join.yml
+  when:
+    - not initizalized.stat.exists
+    - inventory_hostname != groups["masters"][0]
+
+# We leverage jq since kubectl jsonpath implementation is not so great for advanced filtering 
+- name: Approve pending certificate signing requests (since kubelet is configured with serverTLSBootstrap)
+  ansible.builtin.shell: |
+    kubectl get csr -ojson \
+      | jq -r '.items[] | select(.status == {}) | .metadata.name' \
+      | xargs --no-run-if-empty kubectl certificate approve
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf  
+  register: result
+  changed_when: "'approved' in result.stdout"
+  run_once: true
+  when:
+    - not initizalized.stat.exists
+
+- name: Show approved certs
+  ansible.builtin.debug:
+    var: result.stdout_lines
+  when:
+    - not initizalized.stat.exists
+
+# Taint management is handled via JoinConfiguration

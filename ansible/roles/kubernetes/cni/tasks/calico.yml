@@ -1,0 +1,9 @@
+---
+
+# We use sed to replace the default calico cidr (192.168.0.0/16) with our cluster's cidr before applying
+- name: Apply '{{ kubernetes_cni_plugin }}' manifests
+  ansible.builtin.shell: |
+    curl -s {{ item }} | sed 's@192.168.0.0/16@{{kubernetes_cni_plugin_cidr }}@g' | kubectl apply -f -
+  register: cni_result
+  changed_when: "'created' in cni_result.stdout"
+  loop: "{{ kubernetes_cni_plugin_details[kubernetes_cni_plugin].manifests }}"

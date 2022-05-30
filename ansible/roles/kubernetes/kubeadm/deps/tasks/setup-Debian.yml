@@ -1,0 +1,29 @@
+---
+
+- name: Add Kubernetes APT GPG key
+  ansible.builtin.apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Add Kubernetes APT repository
+  ansible.builtin.apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    filename: kubernetes
+
+- name: Create APT preference file to pin package versions
+  ansible.builtin.template:
+    src: apt-preferences.j2
+    dest: /etc/apt/preferences.d/kubernetes
+    mode: 0644
+
+- name: Install kubernetes APT packages for {{ kubeadm_deps_kubernetes_version }}
+  ansible.builtin.apt:
+    name:
+      - kubeadm={{ kubeadm_deps_kubernetes_version }}-00
+      - kubelet={{ kubeadm_deps_kubernetes_version }}-00
+      - kubectl={{ kubeadm_deps_kubernetes_version }}-00
+      - kubernetes-cni
+    update_cache: yes
+    allow_downgrade: yes
+    state: present

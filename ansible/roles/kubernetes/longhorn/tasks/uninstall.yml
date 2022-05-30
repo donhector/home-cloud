@@ -1,0 +1,47 @@
+---
+
+- name: Include OS-specific variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Ensure iscsi service is stopped
+  ansible.builtin.service:
+    name: "{{ longhorn_iscsi_service_name }}"
+    state: stopped
+    enabled: false
+
+- name: Remove host packages
+  ansible.builtin.package: 
+    name: "{{ longhorn_deps }}"
+    state: absent 
+
+- name: Uninstall K8s resources (Step 1/4)
+  ansible.builtin.shell: |
+    kubectl create -f https://raw.githubusercontent.com/longhorn/longhorn/{{ longhorn_version }}/uninstall/uninstall.yaml
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true
+  ignore_errors: true
+
+- name: Uninstall K8s resources (Step 2/4)
+  ansible.builtin.shell: |
+    kubectl wait job/longhorn-uninstall -n default --for=condition=complete --timeout=5m
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true
+
+- name: Uninstall K8s resources (Step 3/4)
+  ansible.builtin.shell: |
+    kubectl delete -f https://raw.githubusercontent.com/longhorn/longhorn/{{ longhorn_version }}/deploy/longhorn.yaml || true
+  #ignore_errors: true
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true
+
+- name: Uninstall K8s resources (Step 4/4)
+  ansible.builtin.shell: |
+    kubectl delete -f https://raw.githubusercontent.com/longhorn/longhorn/{{ longhorn_version }}/uninstall/uninstall.yaml
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true
+
+- name: Wait for 'longhorn-system' namespace to be fully deleted
+  ansible.builtin.shell: |
+    kubectl wait ns/longhorn-system --for=delete --timeout 5m
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: true

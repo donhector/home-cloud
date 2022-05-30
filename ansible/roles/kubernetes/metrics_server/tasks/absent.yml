@@ -1,0 +1,8 @@
+---
+
+- name: Delete metrics-server
+  ansible.builtin.shell: |
+    kubectl delete -f {{ metrics_server_manifest_url }}
+  register: result
+  changed_when: "'deleted' in result.stdout"
+  ignore_errors: true

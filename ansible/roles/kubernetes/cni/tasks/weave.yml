@@ -1,0 +1,13 @@
+---
+
+- name: Get Kubernetes version for Weave installation.
+  ansible.builtin.shell: kubectl version | base64 | tr -d '\n'
+  changed_when: false
+  register: kubectl_version
+
+- name: Configure Weave networking.
+  ansible.builtin.command: "{{ item }}"
+  with_items:
+    - kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout_lines[0] }}&env.IPALLOC_RANGE={{ kubernetes_cni_plugin_cidr }}"
+  register: cni_result
+  changed_when: "'created' in cni_result.stdout"

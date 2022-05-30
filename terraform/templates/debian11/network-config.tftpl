@@ -1,0 +1,37 @@
+version: 2
+ethernets:
+%{ for k, v in nics ~}
+  ${k}:
+  %{~ if v.dhcp == true ~}
+    dhcp4: true
+  %{~ else ~}
+    #dhcp4: false
+    addresses:
+    %{~ if v.ips == null ~}
+      %{~ for address in v.addresses ~}
+      - ${cidrhost(address, v.offset + counter)}/${split("/", address)[1]}
+      %{~ endfor ~}
+    %{~ else ~}
+      %{~ for i in range(length(v.ips)) ~}
+      - ${v.ips[i]}/${split("/", v.addresses[i])[1]}
+      %{~ endfor ~}
+    %{~ endif ~}
+    gateway4: ${cidrhost(v.addresses[0], 1)}
+    %{~ if length(v.addresses) == 2 ~}
+    #dhcp6: false
+    gateway6: ${cidrhost(v.addresses[1], 1)}
+    %{~ endif ~}
+    nameservers:
+      addresses:
+      %{~ for address in v.addresses ~}
+        - ${cidrhost(address, 1)}
+      %{~ endfor ~}
+        - 1.1.1.1
+      %{~ if v.domain != null ~}  
+      search: [${v.domain}]
+      %{~ endif ~}
+    %{~ if v.mac != null ~}
+    macaddress: ${lower(v.mac)}
+    %{~ endif ~}
+  %{~ endif ~}
+%{~ endfor }

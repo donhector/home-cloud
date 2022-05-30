@@ -1,0 +1,4 @@
+---
+metrics_server_version: latest
+metrics_server_ha_mode: true
+metrics_server_state: present

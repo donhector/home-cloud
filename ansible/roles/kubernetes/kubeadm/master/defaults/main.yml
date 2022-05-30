@@ -1,0 +1,15 @@
+---
+
+kubeadm_master_apiserver_address: 10.0.0.10 # When using kubevip this would be the virtual ip
+kubeadm_master_kubeproxy_mode: iptables     # kubeproxy proxy mode. One of 'iptables' or 'ipvs' (best for large clusters)
+kubeadm_master_ignore_preflight_errors: []  # Ignore minimum cpu and mem for smaller cluster. Example: [ NumCPU, Mem ]
+
+kubeadm_master_untaint: false               # Set it to true to allow masters to also run workloads
+
+# By default, the node name used by K8s is a golang call to 'os.hostname'.
+# In most OS that call returns the short hostname (ie. without the domain part)
+# However on Fedora hosts, that call also includes the domain part (ie. it returns the fqdn)
+# So in order to have a consistent naming convention, we can leverage the 'ansible_hostname' fact
+# as it always returns the short form regardless of OS.
+# If the fqdn form is preferred, then use the 'ansible_fqdn' fact instead.
+kubeadm_master_name: '{{ ansible_hostname | lower }}'

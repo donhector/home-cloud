@@ -1,0 +1,3 @@
+---
+host_timezone: Europe/Madrid
+host_enable_ipvs: true

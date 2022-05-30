@@ -1,0 +1,77 @@
+#cloud-config
+preserve_hostname: false
+#hostname: ${hostname}
+fqdn: ${hostname}.${domain}
+#prefer_fqdn_over_hostname: false
+
+timezone: Europe/Madrid
+locale: en_US.UTF-8
+
+users:
+  - name: ${username}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: false
+    shell: /bin/bash
+    groups: ${groups}
+    passwd: ${password}
+    ssh_authorized_keys:
+    %{~ for key in ssh_authorized_keys ~}
+      - ${key}
+    %{~ endfor ~}
+
+ssh_pwauth: false
+disable_root: false
+
+chpasswd:
+  list: |
+     root:toor
+  expire: False
+
+# Expand root partition to take all disk size available
+growpart:
+  mode: auto
+  devices: ['/']
+
+%{ if length(extra_disks_to_mount) > 0 ~}
+disk_setup:
+  %{~ for i, disk in extra_disks_to_mount ~}
+  /dev/vd${["b","c","d","e","f","g"][i]}:
+     table_type: gpt
+     layout: true # Allocate single partition taking up whole disk
+     overwrite: true
+  %{~ endfor ~}
+
+fs_setup:
+  %{~ for i, disk in extra_disks_to_mount ~}
+  - label: ${basename(disk.mount)}
+    filesystem: ext4
+    device: /dev/vd${["b","c","d","e","f","g"][i]}
+    partition: auto
+  %{~ endfor ~}
+
+mounts:
+  %{~ for i, disk in extra_disks_to_mount ~}
+  - [ /dev/vd${["b","c","d","e","f","g"][i]} , ${disk.mount} ]
+  %{~ endfor ~}
+%{~ endif ~}
+
+packages:
+  - qemu-guest-agent
+  - htop
+  - iperf3
+  - iftop
+  - fio
+
+package_update: true
+package_upgrade: true
+
+# This reboot fixes several issues in Debian/Ubuntu, that otherwise require issuing several commands in 'runcmd` section
+# - qemu agent not started after install (ie. "systemctl start qemu-guest-agent")
+# - dhcp request happens before cloudinit setting the new hostname, so hosts can't be accessed by their new name (ie. "systemctl restart networking || netplan apply")
+power_state:
+    delay: now
+    mode: reboot
+    message: Rebooting for all settings to be fully applied
+    timeout: 2
+
+final_message: "The system is finally up, after $UPTIME seconds"

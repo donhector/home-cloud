@@ -1,0 +1,4 @@
+---
+firewall_rules:
+  - { rule: "allow", proto: "tcp", port: "10250", comment: "K8s kubelet" }
+  - { rule: "allow", proto: "tcp", port: "30000:32767", comment: "K8s nodePorts" }

@@ -1,0 +1,4 @@
+---
+
+- ansible.builtin.include_tasks: "{{ metrics_server_state }}.yml"
+  run_once: true

@@ -1,0 +1,29 @@
+---
+
+# - hosts: kubernetes
+#   gather_facts: true
+#   become: true
+#   pre_tasks:
+#     - name: Update apt cache.
+#       apt: update_cache=yes cache_valid_time=600
+#       when: ansible_os_family == 'Debian'
+#   roles:
+#     - role: firewall
+#     - role: kubernetes/host
+#     - role: kubernetes/kubeadm/deps
+#     - role: kubernetes/cri/containerd
+
+# - hosts: masters
+#   become: true
+#   roles:
+#     - role: kubernetes/kubevip
+#     - role: kubernetes/kubeadm/master
+#     - role: kubernetes/kubeconfig
+#     - role: kubernetes/cni
+#     - role: kubernetes/metrics_server
+
+- hosts: nodes
+  become: true
+  roles:
+    # - role: kubernetes/kubeadm/node
+    - role: kubernetes/longhorn
