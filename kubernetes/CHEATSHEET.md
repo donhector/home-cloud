@@ -18,6 +18,14 @@ Set context:
 
 ## Pods / Containers
 
+### Show pods
+
+Show all pods in a namespace
+`kubectl get pods -n kube-system`
+
+Show non running pods in the kube-system namespace (useful for troubleshooting)
+`kubectl get pods -n kube-system --field-selector=status.phase!=Running`
+
 ### Show containers in a pod
 
 `kubectl get pod podname -o 'jsonpath={.spec.containers[*].name}'`
@@ -108,7 +116,7 @@ NOTE: The form below has been deprecated
 
 ### Show all events across namespaces sorted by time
 
-`kubectl get events --all-namespaces  --sort-by='.metadata.creationTimestamp'`
+`kubectl get events --all-namespaces --sort-by='.metadata.creationTimestamp'`
 
 ### Keep watching events across all namespaces
 
@@ -178,7 +186,7 @@ Remove label
 
 `kubectl apply -f <directory>`
 
-`kubectl apply -f <directory> -R`  # Will recurse subdirectories
+`kubectl apply -f <directory> -R` # Will recurse subdirectories
 
 ### Kustomize
 
@@ -190,7 +198,7 @@ Remove label
 
 `kubectl delete -f <directory>`
 
-`kubectl delete -f <directory> -R`  # Will recurse subdirectories
+`kubectl delete -f <directory> -R` # Will recurse subdirectories
 
 ## Imperative commands
 
@@ -200,7 +208,7 @@ Remove label
 
 `kubectl create deployment nginx --image=nginx --replicas=2 --port=80 -o yaml --dry-run=client > deployment.yml`
 
-`kubectl create secret generic nginx -type opaqe --from-literal pass=123 --from-literal user=hector  -oyaml --dry-run=client`
+`kubectl create secret generic nginx -type opaqe --from-literal pass=123 --from-literal user=hector -oyaml --dry-run=client`
 
 ## Managing deployments
 

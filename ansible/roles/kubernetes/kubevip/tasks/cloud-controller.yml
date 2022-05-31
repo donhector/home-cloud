@@ -1,0 +1,8 @@
+---
+- name: Apply Cloud Controller Manager manifest
+  ansible.builtin.shell: |
+    kubectl apply -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml
+  register: result
+  changed_when: "'created' in result.stdout"
+
+- name: Configure Cloud Controller Manager

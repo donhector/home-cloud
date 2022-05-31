@@ -1,3 +1,4 @@
 ---
+# Reqires libvirt-python to be install in the host
 plugin: community.libvirt.libvirt
-uri: 'qemu+ssh://hector@xeon.lan/system'
+uri: "qemu+ssh://hector@xeon.lan/system"

@@ -16,7 +16,7 @@ inventory:
 check:
 	ansible -i libvirt-plugin.yml all -m ping --limit k8s-*
 
-sanity:
+ping:
 	ansible -i inventory/k8s-cluster/inventory.ini all -m ping
 
 truncate:
@@ -37,4 +37,4 @@ clean-known-hosts:
 	@seq 1 3 | xargs -I% -n1 ssh-keygen -f ~/.ssh/known_hosts -R k8s-node%
 
 k8s-cluster:
-	ansible-playbook -i inventory/k8s-ha/inventory.ini playbooks/k8s/kubeadm.yml
+	ansible-playbook -i inventory/k8s-cluster/inventory.ini playbooks/k8s/kubeadm.yml

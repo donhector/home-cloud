@@ -1,0 +1,23 @@
+---
+# TODO: if the rbac and deamonset manifests are not picked up automatically we will have to "kubectl apply -f" them
+- name: Download kube-vip RBAC file (only when deploying as daemonset)
+  ansible.builtin.get_url:
+    url: https://kube-vip.io/manifests/rbac.yaml
+    dest: /etc/kubernetes/manifests/kube-vip-rbac.yaml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Deploying kube-vip as daemon set (k3s and others)
+  ansible.builtin.shell: >
+    ctr run --rm --net-host {{ kubevip_image }}:{{ kubevip_tag }} vip /kube-vip manifest daemonset
+    --arp
+    --interface {{ ansible_default_ipv4.interface }}
+    --address {{ kubevip_address }}
+    --leaderElection
+    --taint
+    --inCluster
+    {{ '--controlplane' if kubevip_controlplane_enable == true }}
+    {{ '--services' if kubevip_services_enable == true }}
+    {{ '--enableLoadBalancer' if kubevip_loadbalancer_enable == true }}
+    | tee /etc/kubernetes/manifests/kube-vip.yaml

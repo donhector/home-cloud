@@ -1,5 +1,4 @@
 ---
-
 # Kube-vip docker image details. Used to generate the appropriate K8s manifest (ie: static pod or daemon set)
 kubevip_tag: v0.4.4
 kubevip_image: ghcr.io/kube-vip/kube-vip
@@ -7,13 +6,19 @@ kubevip_image: ghcr.io/kube-vip/kube-vip
 # Virtual IP or DNS record that will be used to load balance the K8s master nodes
 kubevip_address: 10.0.0.10
 
-# Depending on the cluster type, kubevip will use a static pod or a daemon set
+# Depending on the cluster provisioning tool, kubevip recommends using a static pod or a daemon set
 # See https://kube-vip.chipzoller.dev/docs/installation/static/
 # See https://kube-vip.chipzoller.dev/docs/installation/daemonset/
 kubevip_cluster_type: kubeadm
+
+# Use kubevip for providing HA to control-plane nodes
+kubevip_controlplane_enable: true
+
+# Use kubevip for providing services type "LoadBalancer" functionality
+kubevip_services_enable: true
 
 # From >= 0.4.0 kubevip can leverage IPVS for load balancing.
 # Ensure that your K8s nodes and the Kube-proxy configuration meet the requirements.
 # See https://github.com/kubernetes/kubernetes/blob/master/pkg/proxy/ipvs/README.md
 # And https://kubernetes.io/docs/reference/config-api/kube-proxy-config.v1alpha1/#kubeproxy-config-k8s-io-v1alpha1-ProxyMode
-kubevip_use_ipvs: false
+kubevip_loadbalancer_enable: true

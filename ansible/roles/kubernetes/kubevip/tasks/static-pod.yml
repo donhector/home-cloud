@@ -1,0 +1,17 @@
+---
+# NOTE: I'm only using kubevip to provide load balancing (ie HA) for the control plan ("ie: --controlplane")
+# and not to provide service type "LoadBalancer" capability (ie: "--service"). The idea is to use MetalLb for that
+# In the future I might revisit using Kubevip for both functionalities. When using --service we must also
+# deploy the Kubevip cloud controller and specify the IP range to use. See https://kube-vip.chipzoller.dev/docs/usage/cloud-provider/
+
+- name: Deploying kube-vip as static pod (kubeadm)
+  ansible.builtin.shell: >
+    ctr run --rm --net-host {{ kubevip_image }}:{{ kubevip_tag }} vip /kube-vip manifest pod
+    --arp
+    --interface {{ ansible_default_ipv4.interface }}
+    --address {{ kubevip_address }}
+    --leaderElection
+    {{ '--controlplane' if kubevip_ha_enable == true }}
+    {{ '--services' if kubevip_svc_enable == true }}
+    {{ '--enableLoadBalancer' if kubevip_ipvs_enable == true }}
+    | tee /etc/kubernetes/manifests/kube-vip.yaml

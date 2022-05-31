@@ -4,7 +4,7 @@ Repo for my home cloud IaC lab
 
 ## Libvirt
 
-Libvirt is used as the backing hypervisor. Libvirt acts here as your "cloud provider" (ie. your own AWS, GCP or Azure). Then using Terraform's Libivirt provider you can manage resources in a similar way you'd do for public clouds.    
+Libvirt is used as the backing hypervisor. Libvirt acts here as your "cloud provider" (ie. your own AWS, GCP or Azure). Then using Terraform's Libivirt provider you can manage resources in a similar way you'd do for public clouds.
 
 ## Packer
 
@@ -18,7 +18,7 @@ The `packer/ubuntu2204_` folder uses the `ansible-local provisioner` method. Whi
 
 - Despite uninstalling ansible from the VM once the provisioning was complete, the final disk image was about 1Gb larger that when just using the `ansible` provisioner.
 
-- Currently the provisioner lacks support for ansible-galaxy `requirements.yml` that include both, collections and roles. It assumes you only have either roles or collections. So you end up adding workarounds and your packer template ends up being ugly. 
+- Currently the provisioner lacks support for ansible-galaxy `requirements.yml` that include both, collections and roles. It assumes you only have either roles or collections. So you end up adding workarounds and your packer template ends up being ugly.
 
 ## Terraform
 
@@ -39,7 +39,7 @@ Please refer to `config.auto.tfvars.example*` files for reference.
 
 ### Usage
 
-```
+```shell
 cd terraform
 terraform init
 terraform plan
@@ -49,9 +49,69 @@ terraform refresh
 
 To destroy the infrastructure:
 
-```
+```shell
 cd terraform
 terraform destroy --auto-approve
 ```
 
 ## Ansible
+
+The inventory hosts that will be controlled from Ansible are "natted" VMs running inside the Libvirt host (`xeon.lan`),
+therefore they cannot be accessed directly from outside the Libvirt host. This will be a problem since my
+Ansible controller machine is not the Libvirt host itself but a WSL instance running on my laptop.
+
+So we need a way to make the inventory hosts accessible to our control machine. There are several ways to
+accomplish this in ssh (including creating a tunnel), but in my case I opted for using Method 2 described [here](https://www.jeffgeerling.com/blog/2022/using-ansible-playbook-ssh-bastion-jump-host)
+
+In my laptop I've created a `~/.ssh/config` file with:
+
+```yml
+Host xeon
+  User hector
+  Hostname xeon.lan
+
+Host k8s-*
+  User kube
+  ProxyJump xeon
+```
+
+The flow will the be:
+
+`Laptop ----ssh--> Libvirt host ----ssh--> inventory host`
+
+To verify all works as expected, from my controller machine I could
+
+```shell
+hector@wsl$ cd ansible
+hector@wsl$ make ping
+```
+
+And the result should be:
+
+``` yaml
+ansible -i inventory/k8s-cluster/inventory.ini all -m ping
+k8s-node2 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+k8s-node1 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+k8s-master2 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+k8s-master1 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+k8s-master3 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+k8s-node3 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+```
