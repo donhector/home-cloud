@@ -59,6 +59,9 @@ build {
   # Runs on the Packer host
   post-processor "shell-local" {
     inline = ["echo Build ${source.type}.${source.name} finished!"]
+
+    # Add script to upload the image somewhere
+
   }
 
 }
